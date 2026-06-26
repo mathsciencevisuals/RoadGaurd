@@ -168,4 +168,5 @@ curl -X PUT http://127.0.0.1:8000/api/models/rg-objdet-android-v1/activate
 
 - Database tables are created automatically at startup for local development.
 - Authentication is intentionally not implemented yet.
+- Backend changes under `roadguard_backend/` can be used to trigger the Cloud Run deployment workflow from GitHub Actions.
 - For production, add Alembic migrations, structured logging, rate limiting, and authentication before deployment.
