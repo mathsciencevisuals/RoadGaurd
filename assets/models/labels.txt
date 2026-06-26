@@ -1,0 +1,12 @@
+person
+car
+bus
+truck
+motorcycle
+bicycle
+auto_rickshaw
+pothole
+road_hump
+animal
+unknown_obstacle
+unknown

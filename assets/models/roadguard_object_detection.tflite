@@ -1,0 +1,3 @@
+PLACEHOLDER_TFLITE_MODEL
+Replace this file with a real TensorFlow Lite model binary named
+roadguard_object_detection.tflite before enabling live inference.
