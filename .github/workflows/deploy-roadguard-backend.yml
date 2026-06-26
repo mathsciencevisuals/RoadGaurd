@@ -1,0 +1,42 @@
+name: Deploy RoadGuard Backend
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "roadguard_backend/**"
+      - ".github/workflows/deploy-roadguard-backend.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Submit Cloud Build
+        run: |
+          gcloud builds submit \
+            --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --config roadguard_backend/cloudbuild.backend.yaml \
+            --substitutions=_REGION=${{ vars.GCP_REGION }},_AR_REPOSITORY=${{ vars.GCP_ARTIFACT_REPOSITORY }},_SERVICE_NAME=${{ vars.GCP_CLOUD_RUN_SERVICE }},_SERVICE_ACCOUNT=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }},_ALLOWED_ORIGINS=${{ vars.ROADGUARD_ALLOWED_ORIGINS }}

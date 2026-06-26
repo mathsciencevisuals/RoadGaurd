@@ -1,0 +1,42 @@
+substitutions:
+  _REGION: asia-south1
+  _AR_REPOSITORY: roadguard
+  _SERVICE_NAME: roadguard-backend
+  _IMAGE_NAME: backend
+  _PLATFORM: managed
+  _SERVICE_ACCOUNT: roadguard-backend-runner@${PROJECT_ID}.iam.gserviceaccount.com
+  _ALLOWED_ORIGINS: "*"
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - roadguard_backend/Dockerfile
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:${COMMIT_SHA}
+      - roadguard_backend
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:${COMMIT_SHA}
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --platform=${_PLATFORM}
+      - --region=${_REGION}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:${COMMIT_SHA}
+      - --service-account=${_SERVICE_ACCOUNT}
+      - --allow-unauthenticated
+      - --port=8080
+      - --cpu=1
+      - --memory=1Gi
+      - --min-instances=0
+      - --max-instances=5
+      - --set-env-vars=ROADGUARD_ENVIRONMENT=production,ROADGUARD_DEBUG=false,ROADGUARD_ALLOWED_ORIGINS=${_ALLOWED_ORIGINS}
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_IMAGE_NAME}:${COMMIT_SHA}
